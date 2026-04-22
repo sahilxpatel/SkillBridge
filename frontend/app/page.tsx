@@ -137,29 +137,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Test accounts hint */}
-        <div className="glass-card" style={{ marginTop: 48, padding: "16px 24px", maxWidth: 520, width: "100%" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
-            🧪 Demo Accounts
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", fontSize: "0.75rem", color: "#64748b" }}>
-            {[
-              ["student@skillbridge-app.dev", "Student"],
-              ["trainer@skillbridge-app.dev", "Trainer"],
-              ["institution@skillbridge-app.dev", "Institution"],
-              ["manager@skillbridge-app.dev", "Prog. Manager"],
-              ["officer@skillbridge-app.dev", "Mon. Officer"],
-            ].map(([email, role]) => (
-              <div key={email} style={{ padding: "4px 0" }}>
-                <span style={{ color: "#94a3b8", fontWeight: 600 }}>{role}</span><br />
-                <span style={{ fontFamily: "monospace", fontSize: "0.7rem" }}>{email}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 10, fontSize: "0.7rem", color: "#475569" }}>
-            Password: <code style={{ color: "#a5b4fc" }}>SkillBr1dge#Dev2026!</code>
-          </div>
-        </div>
       </section>
     </div>
   );
