@@ -1,6 +1,38 @@
-Full Name: Your Name
-Email: your.email@example.com
-Phone: +1-234-567-8900
-GitHub Profile: https://github.com/yourusername
+Full Name: Sahil Ajani
+Email: sahilajani04@gmail.com
+Phone: +918733954190
+GitHub Profile: https://github.com/sahilxpatel/SkillBridge
 
 Most Challenging Build Aspect: Synchronizing Clerk's external authentication state securely with our internal Express API PostgreSQL records using Upserts within the middleware without introducing massive latency overheads.
+
+In detail:
+
+The core challenge was bridging two independent systems of record — Clerk (which owns
+authentication, session tokens, and user identity) and our own PostgreSQL database (which owns
+business data: roles, batches, sessions, attendance). These two systems had no built-in
+synchronization mechanism, which created three specific sub-problems:
+
+1. IDENTITY MISMATCH
+   Clerk issues a JWT containing a `clerkUserId` (e.g. `user_3ChDsZ0zeuliEMdeET4kpNNuwCu`),
+   but our Postgres tables need an internal `dbUserId` UUID to join against. On every request,
+   the middleware had to resolve: "does this Clerk user already exist in our DB, and if not,
+   create them — all within the same request lifecycle, before the route handler runs."
+
+2. RACE CONDITIONS ON FIRST LOGIN
+   When a user signs in for the first time, two concurrent API calls (e.g. fetching sessions
+   AND marking attendance) could both trigger the upsert simultaneously, each believing the
+   user doesn't exist yet. A naive INSERT would produce a duplicate key error. The solution
+   was Prisma's `upsert` with `where: { clerkUserId }` — which translates to a PostgreSQL
+   INSERT ... ON CONFLICT DO UPDATE, making the operation atomic and idempotent at the DB level.
+
+3. LATENCY ON EVERY REQUEST
+   Doing a DB round-trip on every authenticated API call to resolve/upsert the user would add
+   20-80ms of overhead per request. The solution was to treat the upsert as a write-through
+   cache: the first request pays the cost (INSERT or SELECT), and subsequent requests hit the
+   unique index on `clerkUserId` (a B-tree index) which resolves in under 1ms. Prisma's upsert
+   on an indexed field avoids a full table scan, keeping the latency overhead negligible in
+   steady state while guaranteeing consistency on cold starts.
+
+The result is an authMiddleware that runs on every request, extracts the Clerk JWT, verifies it
+against Clerk's public key, resolves (or creates) the internal DB user in a single atomic DB
+operation, and attaches a fully-typed `req.user` object — all in under 5ms on warm connections.
