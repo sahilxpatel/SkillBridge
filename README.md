@@ -336,3 +336,37 @@ Programme Manager / Monitoring Officer can view via GET /summaries
 | `GET /institution/trainers` | ❌ | ❌ | ✅ | ❌ | ❌ |
 | `GET /summaries/batch/:id` | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `GET /summaries/overview` | ❌ | ❌ | ❌ | ✅ | ✅ |
+
+---
+
+## 10. Design Decisions
+
+### 1. Clerk for Authentication (not JWT from scratch)
+Clerk was chosen over a custom JWT implementation because it provides enterprise-grade session management, device verification, and multi-factor auth out of the box. This let the project focus on business logic (RBAC, attendance) rather than reinventing secure auth. Clerk's `publicMetadata.role` field is used to propagate roles — set server-side only, so users cannot self-assign roles.
+
+### 2. Role Stored in Clerk `publicMetadata` (not only the DB)
+The source of truth for a user's role is Clerk's `publicMetadata.role`. The Postgres `User` table stores a copy for efficient DB-side joins, but the auth middleware always reads from the verified Clerk JWT claim. This prevents role escalation via direct DB manipulation.
+
+### 3. Just-In-Time User Upsert in Auth Middleware
+Instead of a separate registration endpoint, every authenticated API request triggers an `upsert` of the user into Postgres. If the user exists, it's a no-op. If not, it's created with their Clerk ID, name, and role. This eliminates the "user exists in Clerk but not in DB" race condition common in two-step registration flows.
+
+### 4. `@@unique([sessionId, studentId])` Deduplication at DB Level
+Attendance deduplication is enforced at the Prisma schema level, not only in application logic. Even if two concurrent requests slip through the API, the database rejects the duplicate. The API catches the Prisma `P2002` error and returns a clean `409 Conflict` response.
+
+### 5. Role-Gated Middleware (not per-route checks)
+All role enforcement is centralised in `roleMiddleware.ts` which accepts an array of allowed roles. Routes declare their allowed roles at registration time (`requireRoles(['trainer', 'institution'])`), keeping individual route handlers clean and free of auth logic. This mirrors the Guard pattern from NestJS but implemented in raw Express.
+
+### 6. Invitation Token System for Student Enrolment
+Students cannot self-enrol in batches. A trainer generates a time-limited token (stored in `BatchInvite`), shares the link, and the student's `join` API call validates the token before adding them to `BatchStudent`. This prevents arbitrary batch access and mirrors real-world controlled-access course enrolment.
+
+### 7. Neon + PgBouncer for Serverless-Safe Connections
+The `DATABASE_URL` includes `pgbouncer=true&connect_timeout=30`. Neon uses a serverless Postgres architecture that sleeps idle connections. PgBouncer pooling prevents "too many connections" errors when a cold Render instance opens multiple Prisma connections simultaneously on startup.
+
+### 8. Prisma as ORM (not raw SQL or Knex)
+Prisma was chosen for its type-safe query builder, automatic migration tracking, and the generated client which catches schema-breaking queries at compile time. The `@@unique` and `@relation` constraints in `schema.prisma` serve as living documentation of the data model.
+
+### 9. Monorepo with Separate Frontend & Backend Services
+The project uses a monorepo with `frontend/` and `backend/` directories rather than a Next.js API-routes-only approach. This gives a clear separation of concerns, allows independent deployment pipelines (Vercel for frontend, Render for backend), and makes it straightforward to add a mobile client later that hits the same REST API.
+
+### 10. Role-Specific Sidebars (not one generic view with hidden elements)
+Each role gets a purpose-built dashboard rather than one generic view with conditionally hidden buttons. The sidebar dynamically renders navigation items based on the authenticated user's role sourced from Clerk `publicMetadata`. This reduces cognitive load — a Student never sees a "Create Session" button that they cannot use.
