@@ -89,15 +89,15 @@ If I had more time, I would **decouple the `User` DB sync from the request path*
 │                        CLIENT BROWSER                           │
 │              Next.js 14 (App Router) — Port 3000                │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
-│  │  /student    │  │  /trainer    │  │  /institution         │ │
-│  │  /join/:tok  │  │  /sessions   │  │  /programme-manager   │ │
-│  │  /choose-role│  │  /batches    │  │  /monitoring-officer  │ │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘ │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │  /student    │  │  /trainer    │  │  /institution         │  │
+│  │  /join/:tok  │  │  /sessions   │  │  /programme-manager   │  │ 
+│  │  /choose-role│  │  /batches    │  │  /monitoring-officer  │  │
+│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
 │          │                  │                    │              │
 │          └──────────────────┼────────────────────┘              │
 │                             ▼                                   │
-│              middleware.ts (Clerk Edge Auth Guard)               │
+│              middleware.ts (Clerk Edge Auth Guard)              │
 │         Reads publicMetadata.role → redirects or allows         │
 └─────────────────────────────────────┬───────────────────────────┘
                                       │  HTTP (fetch / REST)
@@ -106,7 +106,7 @@ If I had more time, I would **decouple the `User` DB sync from the request path*
 │                EXPRESS BACKEND — Port 5001                      │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    app.ts (Entry Point)                   │   │
+│  │                    app.ts (Entry Point)                  │   │
 │  │   CORS · JSON body-parser · Route mounting               │   │
 │  └──────────────────────┬───────────────────────────────────┘   │
 │                         │                                       │
