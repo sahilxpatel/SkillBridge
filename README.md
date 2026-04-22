@@ -4,13 +4,9 @@ This repository contains the end-to-end prototype for the SkillBridge attendance
 
 ## 1. Live URLs & Deployment Status
 
-- **Frontend (Vercel):** `https://skillbridge-frontend-demo.vercel.app` (Placeholder)
-- **Backend (Render):** `https://skillbridge-api-demo.onrender.com` (Placeholder)
+- **Frontend (Vercel):** https://skill-bridge-gilt-three.vercel.app/
+- **Backend (Render):** https://skillbridge-backend-sv4f.onrender.com
 
-> **Deployment Note & Honesty Policy:**
-> While developing this prototype over the past two days, I successfully deployed the frontend to Vercel and the Express backend to Railway using a Neon PostgreSQL instance. However, upon testing the deployed version, the Prisma Client on Railway frequently timed out connecting to Neon (a common IPv4/IPv6 pooling issue with free tiers). I attempted to add `pgbouncer=true` to the `DATABASE_URL` and generate the Prisma client with the `debian-openssl-3.0.x` engine, but was unable to fully resolve the instability in the allotted timeframe.
->
-> Therefore, the system works flawlessly when run locally. The live URLs above may return 500 errors if the DB pool is exhausted. I believe a partial working deployment with an honest explanation is better than hiding the error.
 
 ## 2. Test Accounts
 
