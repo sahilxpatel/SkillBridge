@@ -1,0 +1,6 @@
+Full Name: Your Name
+Email: your.email@example.com
+Phone: +1-234-567-8900
+GitHub Profile: https://github.com/yourusername
+
+Most Challenging Build Aspect: Synchronizing Clerk's external authentication state securely with our internal Express API PostgreSQL records using Upserts within the middleware without introducing massive latency overheads.

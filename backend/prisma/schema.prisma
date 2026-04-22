@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  trainer
+  institution
+  programme_manager
+  monitoring_officer
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  name        String
+  role        Role
+  institutionId String?
+  createdAt   DateTime @default(now())
+
+  trainerSessions Session[]    @relation("TrainerSessions")
+  trainerBatches  BatchTrainer[]
+  studentBatches  BatchStudent[]
+  attendances     Attendance[]
+}
+
+model Batch {
+  id            String        @id @default(cuid())
+  name          String
+  institutionId String
+  createdAt     DateTime      @default(now())
+
+  trainers      BatchTrainer[]
+  students      BatchStudent[]
+  sessions      Session[]
+  invites       BatchInvite[]
+}
+
+model BatchTrainer {
+  batchId   String
+  trainerId String
+
+  batch   Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  trainer User  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@id([batchId, trainerId])
+}
+
+model BatchStudent {
+  batchId    String
+  studentId  String
+
+  batch   Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([batchId, studentId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  batchId   String
+  trainerId String
+  title     String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+
+  batch       Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  trainer     User         @relation("TrainerSessions", fields: [trainerId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  sessionId String
+  studentId String
+  status    AttendanceStatus
+  markedAt  DateTime         @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student User    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
+}
+
+model BatchInvite {
+  id        String   @id @default(cuid())
+  batchId   String
+  token     String   @unique
+  createdBy String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  batch Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+}
