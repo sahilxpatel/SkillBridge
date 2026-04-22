@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: skillbridge-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false        # Set manually in Render dashboard (contains secrets)
+      - key: CLERK_SECRET_KEY
+        sync: false        # Set manually in Render dashboard (contains secrets)
+      - key: FRONTEND_URL
+        sync: false        # Set to your Vercel URL after deploying frontend
